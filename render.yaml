@@ -1,0 +1,24 @@
+# הגדרת פריסה ל-Render.com
+# לפריסה אוטומטית: חבר את הריפוזיטורי שלך ב-Render והוא יזהה את הקובץ הזה
+
+services:
+  - type: web
+    name: status-monitor
+    runtime: node
+    region: frankfurt  # קרוב לישראל
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # אופציונלי: לשמירת ההיסטוריה אחרי deploy חדש,
+      # הוסף Persistent Disk ב-Render והגדר:
+      # - key: HISTORY_FILE
+      #   value: /var/data/history.json
+    healthCheckPath: /api/health
+    # אופציונלי: persistent disk לשמירת היסטוריה
+    # disk:
+    #   name: status-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
