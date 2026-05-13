@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מצב השירותים | Status Monitor</title>
+  <meta name="description" content="מערכת לניטור זמינות שירותי אינטרנט פופולריים בזמן אמת">
+
+  <!-- גופנים עבריים יפים -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2310b981'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="background-grid"></div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2 L12 22 M2 12 L22 12"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>מצב השירותים</h1>
+          <p class="brand-subtitle">ניטור זמינות בזמן אמת</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="refresh-btn" class="btn-refresh" aria-label="רענן">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+            <path d="M8 16H3v5"></path>
+          </svg>
+          <span>רענן</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- סטטוס כללי -->
+    <section class="overall-status" id="overall-status">
+      <div class="overall-pulse"></div>
+      <div class="overall-content">
+        <div class="overall-indicator" id="overall-indicator">
+          <div class="overall-dot"></div>
+        </div>
+        <div class="overall-text">
+          <h2 id="overall-title">בודק סטטוס...</h2>
+          <p id="overall-subtitle">מעדכן נתונים מהשירותים</p>
+        </div>
+        <div class="overall-meta">
+          <div class="overall-stat">
+            <span class="stat-value" id="stat-ok">—</span>
+            <span class="stat-label">תקינים</span>
+          </div>
+          <div class="overall-stat">
+            <span class="stat-value" id="stat-issues">—</span>
+            <span class="stat-label">תקלות</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- כרטיסי שירותים -->
+    <section class="services-section">
+      <div class="section-header">
+        <h2>שירותים</h2>
+        <span class="last-updated" id="last-updated"></span>
+      </div>
+      <div class="services-grid" id="services-grid">
+        <!-- כרטיסים יוטענו דינמית -->
+      </div>
+    </section>
+
+    <!-- הודעת שגיאה -->
+    <div id="error-banner" class="error-banner hidden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span id="error-message">לא ניתן היה לטעון נתונים</span>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>הסטטוסים מתעדכנים אוטומטית כל דקה · נתונים מ-APIs רשמיים של ספקי השירותים</p>
+  </footer>
+
+  <!-- תבנית של כרטיס שירות -->
+  <template id="service-card-template">
+    <article class="service-card" data-status="loading">
+      <div class="card-header">
+        <div class="card-icon"></div>
+        <div class="card-info">
+          <h3 class="card-name"></h3>
+          <span class="card-category"></span>
+        </div>
+        <div class="card-status-indicator">
+          <div class="status-dot"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-status-text"></div>
+        <div class="card-description"></div>
+      </div>
+      <div class="card-uptime">
+        <div class="uptime-header">
+          <span class="uptime-label">7 ימים אחרונים</span>
+          <span class="uptime-percent">—</span>
+        </div>
+        <div class="uptime-bars">
+          <!-- 7 עמודות יוטענו דינמית -->
+        </div>
+        <div class="uptime-axis">
+          <span>לפני שבוע</span>
+          <span>היום</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="card-incidents"></div>
+        <a class="card-link" target="_blank" rel="noopener">
+          <span>פרטים</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 17L17 7M17 7H7M17 7V17"></path>
+          </svg>
+        </a>
+      </div>
+    </article>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>
