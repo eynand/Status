@@ -1,0 +1,13 @@
+{
+  "name": "status-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root proxy package.json so platforms (e.g. Render) that expect package.json at the repo root install and start the backend service.",
+  "scripts": {
+    "postinstall": "cd backend && npm install",
+    "start": "cd backend && node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
