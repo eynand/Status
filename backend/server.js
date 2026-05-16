@@ -53,7 +53,9 @@ app.get('/api/services', (req, res) => {
     category: s.category,
     color: s.color,
     icon: s.icon,
-    publicUrl: s.publicUrl
+    publicUrl: s.publicUrl,
+    reliability: s.reliability || 'medium',
+    reliabilityNote: s.reliabilityNote || ''
   })));
 });
 

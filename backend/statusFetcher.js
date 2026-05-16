@@ -171,28 +171,178 @@ async function fetchGoogle(service) {
 }
 
 // Fallback - בדיקת זמינות בסיסית על ידי ניסיון לגשת ל-URL
+// משמש גם כסוג עיקרי לשירותים ללא API ציבורי (Netflix, Disney+, HOT וכו')
 async function fetchByPing(service) {
+  const testUrl = service.apiUrl || service.publicUrl;
+  const startTime = Date.now();
   try {
-    const testUrl = service.publicUrl;
-    const response = await fetchWithTimeout(testUrl);
-    const isHealthy = response.ok;
-    return {
-      status: isHealthy ? 'ok' : 'warning',
-      statusText: isHealthy ? 'תקין' : 'לא נגיש',
-      description: isHealthy ? 'השירות זמין' : 'יש בעיה בגישה לשירות',
-      incidents: [],
-      lastUpdated: new Date().toISOString()
-    };
+    // ננסה HEAD תחילה - חוסך bandwidth ומהיר יותר
+    let response;
+    try {
+      response = await fetchWithTimeout(testUrl, {
+        method: 'HEAD',
+        redirect: 'follow'
+      });
+    } catch (headError) {
+      // אם HEAD נכשל (חלק מהשרתים לא תומכים) - ננסה GET
+      response = await fetchWithTimeout(testUrl, {
+        method: 'GET',
+        redirect: 'follow'
+      });
+    }
+
+    const responseTime = Date.now() - startTime;
+    const status = response.status;
+
+    if (status >= 200 && status < 400) {
+      // בדיקת זמני תגובה - איטיות יכולה להעיד על בעיה
+      let resultStatus = 'ok';
+      let statusText = 'תקין';
+      let description = `השירות זמין (${responseTime}ms)`;
+      if (responseTime > 5000) {
+        resultStatus = 'warning';
+        statusText = 'תגובה איטית';
+        description = `השירות מגיב לאט (${responseTime}ms)`;
+      }
+      return {
+        status: resultStatus,
+        statusText,
+        description,
+        responseTime,
+        incidents: [],
+        lastUpdated: new Date().toISOString()
+      };
+    } else if (status >= 400 && status < 500) {
+      return {
+        status: 'ok',
+        statusText: 'תקין',
+        description: `השירות זמין (${responseTime}ms)`,
+        responseTime,
+        incidents: [],
+        lastUpdated: new Date().toISOString()
+      };
+    } else {
+      return {
+        status: 'error',
+        statusText: 'תקלת שרת',
+        description: `שגיאת שרת (קוד ${status})`,
+        responseTime,
+        incidents: [],
+        lastUpdated: new Date().toISOString()
+      };
+    }
   } catch (e) {
+    const isTimeout = e.name === 'AbortError' || e.message.includes('timeout');
     return {
-      status: 'unknown',
-      statusText: 'לא ידוע',
-      description: 'לא ניתן היה לבדוק את הסטטוס',
+      status: isTimeout ? 'warning' : 'error',
+      statusText: isTimeout ? 'איטי' : 'לא נגיש',
+      description: isTimeout
+        ? 'השירות מגיב באיטיות או לא מגיב'
+        : 'לא ניתן ליצור חיבור לשירות',
       incidents: [],
       lastUpdated: new Date().toISOString(),
       error: e.message
     };
   }
+}
+
+// בדיקה רב-נקודות (Multi-ping) - מתאים לשירותי streaming
+// בודק מספר endpoints (אתר, CDN, API) ומסכם את התוצאות
+async function fetchMultiPing(service) {
+  const endpoints = service.endpoints || [];
+  if (endpoints.length === 0) {
+    return await fetchByPing(service);
+  }
+
+  // הרצה במקביל של כל הבדיקות
+  const results = await Promise.all(
+    endpoints.map(async (endpoint) => {
+      const startTime = Date.now();
+      try {
+        // נסיון HEAD תחילה
+        let response;
+        try {
+          response = await fetchWithTimeout(endpoint.url, {
+            method: 'HEAD',
+            redirect: 'follow'
+          });
+        } catch (e) {
+          response = await fetchWithTimeout(endpoint.url, {
+            method: 'GET',
+            redirect: 'follow'
+          });
+        }
+        const responseTime = Date.now() - startTime;
+        const ok = response.status >= 200 && response.status < 500; // 4xx גם נחשב חי
+        return {
+          name: endpoint.name,
+          url: endpoint.url,
+          ok,
+          status: response.status,
+          responseTime
+        };
+      } catch (e) {
+        return {
+          name: endpoint.name,
+          url: endpoint.url,
+          ok: false,
+          status: 0,
+          responseTime: Date.now() - startTime,
+          error: e.message
+        };
+      }
+    })
+  );
+
+  // ניתוח התוצאות
+  const okCount = results.filter(r => r.ok).length;
+  const totalCount = results.length;
+  const failedEndpoints = results.filter(r => !r.ok);
+  const avgResponseTime = Math.round(
+    results.filter(r => r.ok).reduce((sum, r) => sum + r.responseTime, 0) /
+    Math.max(okCount, 1)
+  );
+
+  // הגדרת סטטוס לפי יחס הצלחות
+  let status, statusText, description;
+  if (okCount === totalCount) {
+    // הכל תקין
+    status = 'ok';
+    statusText = 'תקין';
+    if (avgResponseTime > 5000) {
+      status = 'warning';
+      statusText = 'תגובה איטית';
+      description = `כל ${totalCount} נקודות מגיבות אך באיטיות (${avgResponseTime}ms)`;
+    } else {
+      description = `כל ${totalCount} נקודות הבדיקה מגיבות תקין (${avgResponseTime}ms)`;
+    }
+  } else if (okCount === 0) {
+    // כלום לא תקין
+    status = 'error';
+    statusText = 'לא נגיש';
+    description = `כל ${totalCount} נקודות הבדיקה אינן מגיבות`;
+  } else {
+    // חלקי
+    status = 'warning';
+    statusText = 'תקלה חלקית';
+    const failedNames = failedEndpoints.map(r => r.name).join(', ');
+    description = `${okCount} מתוך ${totalCount} נקודות תקינות. בעיה ב: ${failedNames}`;
+  }
+
+  return {
+    status,
+    statusText,
+    description,
+    responseTime: avgResponseTime,
+    endpoints: results,
+    incidents: failedEndpoints.map(r => ({
+      name: `נקודת ${r.name} לא מגיבה`,
+      status: 'investigating',
+      impact: 'minor',
+      url: r.url
+    })),
+    lastUpdated: new Date().toISOString()
+  };
 }
 
 // פונקציה ראשית - נתב לפי סוג השירות
@@ -212,6 +362,12 @@ export async function getServiceStatus(service) {
       case 'google':
         result = await fetchGoogle(service);
         break;
+      case 'multi-ping':
+        result = await fetchMultiPing(service);
+        break;
+      case 'ping':
+        result = await fetchByPing(service);
+        break;
       default:
         result = await fetchByPing(service);
     }
@@ -224,6 +380,8 @@ export async function getServiceStatus(service) {
       color: service.color,
       icon: service.icon,
       publicUrl: service.publicUrl,
+      reliability: service.reliability || 'medium',
+      reliabilityNote: service.reliabilityNote || '',
       ...result
     };
   } catch (error) {
@@ -236,6 +394,8 @@ export async function getServiceStatus(service) {
       color: service.color,
       icon: service.icon,
       publicUrl: service.publicUrl,
+      reliability: service.reliability || 'medium',
+      reliabilityNote: service.reliabilityNote || '',
       status: 'unknown',
       statusText: 'לא ידוע',
       description: 'לא ניתן היה לבדוק את הסטטוס כעת',
