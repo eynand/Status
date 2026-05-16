@@ -331,8 +331,152 @@ body {
   font-family: var(--font-mono);
 }
 
+/* ====== כפתור מקרא + פאנל ====== */
+.info-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: transparent;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: auto;
+  margin-left: 16px;
+}
+
+.info-btn:hover {
+  background-color: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.info-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.reliability-panel {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-bottom: 24px;
+  animation: slideDown 0.25s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reliability-panel h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+}
+
+.reliability-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.reliability-level-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reliability-level-item p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.reliability-level-item strong {
+  color: var(--status-warning);
+  font-weight: 600;
+}
+
+/* ====== Reliability Badges ====== */
+.reliability-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  width: fit-content;
+}
+
+.reliability-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.reliability-high {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.reliability-medium {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
+.reliability-low {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
 /* ====== רשת כרטיסים ====== */
 .services-grid {
+  display: block;
+}
+
+/* כותרת קטגוריה */
+.category-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 32px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.category-header:first-child {
+  margin-top: 0;
+}
+
+.category-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.category-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  background-color: var(--bg-card);
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+}
+
+.category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
@@ -632,17 +776,40 @@ body {
   align-items: center;
   justify-content: space-between;
   background-color: rgba(0, 0, 0, 0.15);
+  gap: 8px;
 }
 
-.card-incidents {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  font-family: var(--font-mono);
+.card-reliability {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: help;
+  white-space: nowrap;
 }
 
-.card-incidents.has-incidents {
-  color: var(--status-error);
-  font-weight: 500;
+.card-reliability svg {
+  width: 11px;
+  height: 11px;
+}
+
+.card-reliability[data-reliability="high"] {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.card-reliability[data-reliability="medium"] {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
+.card-reliability[data-reliability="low"] {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
 }
 
 .card-link {

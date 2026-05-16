@@ -75,8 +75,54 @@
     <section class="services-section">
       <div class="section-header">
         <h2>שירותים</h2>
+        <button id="reliability-info-btn" class="info-btn" aria-label="מידע על רמות אמינות">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>מקרא אמינות</span>
+        </button>
         <span class="last-updated" id="last-updated"></span>
       </div>
+
+      <!-- פאנל מקרא אמינות (מוסתר כברירת מחדל) -->
+      <div id="reliability-panel" class="reliability-panel hidden">
+        <h4>על מה אנחנו בודקים?</h4>
+        <div class="reliability-levels">
+          <div class="reliability-level-item">
+            <span class="reliability-badge reliability-high">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+                <polyline points="14 13 8 19 6 17"></polyline>
+              </svg>
+              גבוהה
+            </span>
+            <p>נתונים מ-API רשמי של דף הסטטוס. משקף בדיוק את מצב השירות.</p>
+          </div>
+          <div class="reliability-level-item">
+            <span class="reliability-badge reliability-medium">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              בינונית
+            </span>
+            <p>בדיקת תשתית ה-API/CDN של השירות בפועל. משקף את זמינות התשתית.</p>
+          </div>
+          <div class="reliability-level-item">
+            <span class="reliability-badge reliability-low">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              נמוכה
+            </span>
+            <p>בדיקת זמינות אתר תאגידי בלבד. <strong>לא בהכרח משקף את זמינות ה-streaming/TV</strong> שעלולה להיות שונה.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="services-grid" id="services-grid">
         <!-- כרטיסים יוטענו דינמית -->
       </div>
@@ -128,7 +174,10 @@
         </div>
       </div>
       <div class="card-footer">
-        <div class="card-incidents"></div>
+        <div class="card-reliability" title="">
+          <span class="reliability-icon"></span>
+          <span class="reliability-label"></span>
+        </div>
         <a class="card-link" target="_blank" rel="noopener">
           <span>פרטים</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
